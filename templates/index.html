@@ -1,0 +1,74 @@
+<!doctype html>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.js"></script>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+    <p class="{{ category }}">{{ message }}</p>
+{% endfor %}
+<form action="" method="post" name="simple" enctype="multipart/form-data">
+   <p>
+      Upload a file please!
+      <br>
+      {{ form.hidden_tag() }}
+        {{ form.document}}
+        <br>
+
+    </p>
+   <p><input type="submit" value="Submit"></p>
+</form>
+Last file uploaded
+{{ filename }}
+
+<form action="" method="post" name="Inputs">
+   {{variable.hidden_tag()}}
+   <p>
+       {{variable.myField()}}
+   </p>
+</form>
+
+
+<body>
+   <h1>
+     Click below to see charts
+   </h1>
+   <a href={{ url_for('plot_chartjs') }}>Plotly Chart </a>
+   </body>
+   <body>
+      <div class="col-xs-3">
+         <label> Choose the plot type....</label>
+         <select class="form-control" id ='first_cat'>
+             <option value="Bar">Bar</option>
+             <option value="Scatter">Scatter</option>
+         </select>
+     </div>
+      <div id="plotly-timeseries"></div>
+      <script>
+      var graph = {{ plot_json | safe }};
+      Plotly.plot('plotly-timeseries', graph, {});
+      </script>
+
+   </body>
+<p>
+   Todo
+</p>
+
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+         {% for header in headers %}
+        <th>{{ header }} </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in values %}
+        <tr>
+           {% for cell in row %}
+          <td>{{ cell }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>

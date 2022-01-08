@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- Import Plotly (does not have to be from CDN) -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<body>
+<div id="plotly-timeseries" class='chart'></div>
+<script>
+var graph = {{ plot_json | safe }};
+Plotly.plot('plotly-timeseries', graph, {});
+</script>
+
+    <h1>
+      Thank you!
+    </h1>
+    <a href={{ url_for('upload_file') }}>home</a>
+    </body>
