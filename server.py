@@ -1,19 +1,16 @@
 from flask.templating import render_template
-from forms import DocumentUploadForm, Inputs
+from forms import DocumentUploadForm
 import os
+from flask import current_app #for testing
 from flask import Flask, flash, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
-import plotly.express as px
 import pandas as pd
 import json
 import plotly
-from utils import make_data, make_table, make_plotly
-
-#UPLOAD_FOLDER = '/path/to/the/uploads'
-#ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-
+from utils import pull_df, create_plot, prepare_chart
 
 app = Flask(__name__)
+
 
 SECRET_KEY = os.urandom(32)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -21,18 +18,19 @@ app.config['SECRET_KEY'] = SECRET_KEY
 # create the folders when setting up your app
 os.makedirs(os.path.join(app.instance_path, 'instance'), exist_ok=True)
 
-CURRENT_FILE= None
-column_names = ['Status','Country','count']
+
 
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
+    #print(dir(request))
+    #print(request.form)
+    #print(request.files)
     #print(request.method)
     #print(dir(request))
     #print(request.values)
     #print(request.form)
     form = DocumentUploadForm()
-    variable = Inputs()
     #session['anyfile'] = False
     if session.get('filename') is None:
         full_filename = None
@@ -40,11 +38,21 @@ def upload_file():
         full_filename = session.get('filename')
     #print(form)
     if form.validate_on_submit():
+        #print(dir(form))
+        #print(form.hidden_tag())
+        #print(form.data)
         f = form.document.data
+        res_path = form.result_path.data
+        #print(dir(form.document))
+        #print(form.document.has_file())
         filename = f.filename
-        f.save(os.path.join(app.instance_path,filename))
+        if res_path == "":
+            save_path = app.instance_path
+        else:
+            save_path = res_path #will need to validate this...
+        f.save(os.path.join(save_path,filename))
         flash("File successfull uploaded!","success")
-        session['filename']= os.path.join(app.instance_path,filename)
+        session['filename']= os.path.join(save_path,filename)
         #session.modified = True
         full_filename = session.get('filename')
 
@@ -52,64 +60,45 @@ def upload_file():
        # v = form.to_graph.data
         #print(v)
 
+    #get df
+    df = pull_df(current_file=full_filename)
+
+    #for testing
+    feature = "Date" #need this until selector value possible
+    #print(bar)
+    chart_labels, chart_values,chart_type = prepare_chart(df,feature)
     
-    #print(variable.myChoices)
 
-    #prepare data
-    df = make_data(current_file=full_filename)
-
-    #for bar chart
-    plot_json=make_plotly(df_grouped=df)
-
-    #for table
-    headers,values = make_table(df_grouped=df)
-    print(full_filename)
     return render_template('index.html', form=form,
-    variable = variable,
             filename=full_filename,
-            plot_json=plot_json,
             current_file = full_filename,
-            headers= headers, values = values)
+            labels = chart_labels,
+            legend = 'hi',
+            values = chart_values,
+            headers = df.columns)
 
 
 
+@app.route('/bar', methods=['GET', 'POST'])
+def change_features():
+    print('hhhhhh')
+    feature = request.args['selected']
+    print(feature)
+    graphJSON= create_plot(feature)
 
-@app.route("/plotly")
-def plot_chartjs():
-    # total confirmed cases globally
-    print(session.get('filename'))
-    if session.get('filename') is None:
-        full_filename = None
-    else:   
-        full_filename = session.get('filename')
-    df = make_data(current_file=full_filename)
-    plot_json=make_plotly(df_grouped=df)
-    #plot_json=make_data(current_file=session.get('filename'))
+    return graphJSON
 
-    return render_template('plotly_chart.html', plot_json = plot_json)
-
-
-@app.route('/table')
-def index():
-    global CURRENT_FILE
-    return render_template('ajax_table.html', title='Ajax Table',filename=CURRENT_FILE)
+@app.route('/table_display', methods=['GET', 'POST'])
+def table_display():
+    df =  pd.read_csv(session['filename'])
+    #df = df[['Status','Country']]
+    # get table headers and rows
+    columns = df.columns
+    table_d = df.to_json(orient='index')
+    rows = df.to_json(orient='values')
 
 
-@app.route('/api/data')
-def data():
-    global CURRENT_FILE
-    global column_names
-    if CURRENT_FILE is None:
-        df_grouped = pd.DataFrame(columns=column_names)
-    else:
-        data = pd.read_csv(CURRENT_FILE)
-        #countries = ['Chile','South Africa']
-        countries = ['Chile']
-        df = data[data['Country'].isin(countries)]
-        df_grouped = df.groupby(['Country','Status']).size().reset_index(name='count')
-
-    return {'data': df_grouped.to_dict()}
-
+    return render_template('display.html', columns=columns, rows=json.dumps(rows))
 
 if __name__ == "__main__":
   app.run(debug = True, port = 8000)

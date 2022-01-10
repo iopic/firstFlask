@@ -2,6 +2,10 @@ import pandas as pd
 import plotly.express as px
 import json
 import plotly
+from datetime import datetime
+import plotly.graph_objs as go #for testing
+
+import numpy as np
 
 
 column_names = ['Status','Country','count']
@@ -23,26 +27,57 @@ def make_table(df_grouped):
 
     return column_names, values
 
-
-def make_data(current_file):
-    global column_names
-    print(current_file)
-    if current_file =='None' or current_file is None:
-        df_grouped = pd.DataFrame(columns=column_names)
+def pull_df(current_file):
+    if current_file is None:
+        df = pd.DataFrame(columns = ['Date','ISO','Country','Status','Note'])
     else:
-        data = pd.read_csv(current_file)
-        #countries = ['Chile','South Africa']
-        countries = ['Chile','Belgium']
-        df = data[data['Country'].isin(countries)]
-        df_grouped = df.groupby(['Country','Status']).size().reset_index(name='count')
-    return df_grouped
+        df = pd.read_csv(current_file)
+        df['Date']=df['Date'].apply(lambda d: datetime.strptime(d, "%d/%m/%Y"))
+    return df
 
-def make_plotly(df_grouped):
-    fig = px.bar(df_grouped, x='Status',color = 'Country', y=['count'], title='Global daily new cases')
-    #fig.update_xaxes(rangeslider_visible=False)
-    #fig.show()
-    plot_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    
-    #labels = df_grouped['Status'].tolist()
-    #values = df_grouped['count'].tolist()
-    return  plot_json
+
+def prepare_chart(df, feature):
+    """
+    feature = selected type from dropdown bar
+    """
+    if feature == "Date":
+        chart_type = 'bar'
+    else:
+        chart_type = 'line'
+    df_status = df.groupby(['Status']).size().reset_index(name='count')
+    labels = df_status['Status'].tolist()
+    values = df_status['count'].tolist()
+    return labels,values, chart_type
+
+### straight examples
+def create_plot(feature):
+    """
+    feature = the value from the selector bar
+    """
+    if feature == 'Date':
+        N = 40
+        x = np.linspace(0, 1, N)
+        y = np.random.randn(N)
+        df = pd.DataFrame({'x': x, 'y': y}) # creating a sample dataframe
+        data = [
+            go.Bar(
+                x=df['x'], # assign x as the dataframe column 'x'
+                y=df['y']
+            )
+        ]
+    else:
+        N = 1000
+        random_x = np.random.randn(N)
+        random_y = np.random.randn(N)
+
+        # Create a trace
+        data = [go.Scatter(
+            x = random_x,
+            y = random_y,
+            mode = 'markers'
+        )]
+
+
+    graphJSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return graphJSON

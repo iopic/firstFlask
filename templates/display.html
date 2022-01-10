@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Dashboard</title>
+</head>
+<link rel='stylesheet' href="{{url_for('static',filename='css/jquery.dataTables.min.css')}}">
+<script src="{{url_for('static',filename='js/d3.min.js')}}"></script>
+<script src="{{ url_for('static', filename='js/jquery-1.11.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+<div id="display_table">
+    <table class="cell-border" >
+      <thead>
+        <tr>
+          {% for column in columns %}
+            <th>{{ column }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+    </table>
+  </div>
+
+  <script>
+// set table as DataTable
+var display_table = $('#display_table').find('table').DataTable({
+    deferRender: true
+});
+
+function loadTable() {
+    $.get('table_display', function(response, status){
+        var data = JSON.parse({{ rows | safe }});
+        display_table.clear();
+
+        Object.keys(data).forEach(function(key) {
+            // fill row
+            row = data[key]
+
+            // append to table
+            display_table.row.add(row);
+        });
+
+        // Update table -- make rows visible.
+        display_table.draw();
+    });
+}
+
+//execute function
+loadTable();
+console.log(display_table.rows( { filter : 'applied'} ).nodes().length);
+console.log(display_table.rows( { filter : 'applied'} ).data());
+  </script>
+
+<body>
+    <h3>
+      Go back to main
+    </h3>
+    <a href={{ url_for('upload_file') }}>Main</a>
+    </body>
