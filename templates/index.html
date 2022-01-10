@@ -1,9 +1,14 @@
 <!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Dashboard</title>
+</head>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.js"></script>
-
+{% block data_entry %}
 {% for category, message in get_flashed_messages(with_categories=true) %}
     <p class="{{ category }}">{{ message }}</p>
 {% endfor %}
@@ -13,6 +18,14 @@
       <br>
       {{ form.hidden_tag() }}
         {{ form.document}}
+        <br>
+
+    </p>
+    <p>
+      Select val
+      <br>
+      {{ form.hidden_tag() }}
+        {{ form.to_graph}}
         <br>
 
     </p>
@@ -26,8 +39,17 @@ Last file uploaded
    <p>
        {{variable.myField()}}
    </p>
+   
 </form>
+<p>
+   Render graphs!
+   <form method="post" action="/">
+      <input type="submit" value="VALUE1" name="makegraphs"/>
+      <input type="submit" value="VALUE2" name="action2" />
+   </form>
+</p>
 
+{% endblock %}
 
 <body>
    <h1>
@@ -35,6 +57,8 @@ Last file uploaded
    </h1>
    <a href={{ url_for('plot_chartjs') }}>Plotly Chart </a>
    </body>
+
+   {% block plotly_chart %}
    <body>
       <div class="col-xs-3">
          <label> Choose the plot type....</label>
@@ -53,7 +77,7 @@ Last file uploaded
 <p>
    Todo
 </p>
-
+{% endblock %}
   <table id="data" class="table table-striped">
     <thead>
       <tr>

@@ -27,7 +27,10 @@ column_names = ['Status','Country','count']
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
-    global CURRENT_FILE
+    #print(request.method)
+    #print(dir(request))
+    #print(request.values)
+    #print(request.form)
     form = DocumentUploadForm()
     variable = Inputs()
     #session['anyfile'] = False
@@ -44,9 +47,13 @@ def upload_file():
         session['filename']= os.path.join(app.instance_path,filename)
         #session.modified = True
         full_filename = session.get('filename')
-        #CURRENT_FILE = os.path.join(app.instance_path,filename)
+
+        #get variable
+       # v = form.to_graph.data
+        #print(v)
+
     
-    print(variable.myChoices)
+    #print(variable.myChoices)
 
     #prepare data
     df = make_data(current_file=full_filename)

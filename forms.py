@@ -7,6 +7,8 @@ from wtforms.validators import DataRequired, Email
 class DocumentUploadForm(FlaskForm):
     document = FileField('Document', validators=[FileRequired(), FileAllowed(['csv'], 'CSV Document only!')])
     #submit = SubmitField('Submit bia')
+    myChoices = [(1,"a"),(2,"b")]
+    to_graph = SelectField(u'Variable to view', choices = myChoices, validators = [DataRequired()])
 
 class Inputs(FlaskForm):
     myChoices = [(1,"a"),(2,"b")]
